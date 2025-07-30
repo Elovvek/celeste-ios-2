@@ -10,44 +10,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
 
-      - name: Checkout submodules explicitly (just in case)
-        run: git submodule update --init --recursive
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Install dependencies
+      - name: Install Mono (official PKG)
         run: |
-          brew install mono nuget
-          echo "Dependencies installed."
+          curl -LO https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.122.macos10.xamarin.universal.pkg
+          sudo installer -pkg MonoFramework-MDK-6.12.0.122.macos10.xamarin.universal.pkg -target /
+
+      - name: Check Mono version
+        run: mono --version
+
+      - name: Install NuGet CLI
+        run: |
+          curl -LO https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
 
       - name: Restore NuGet packages
-        run: nuget restore celestemeow.sln
-
-      - name: Build solution
-        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
-
-      - name: Create placeholder Content folder with dummy file (if needed)
         run: |
-          mkdir -p Content
-          echo "Replace this with your real Celeste game files." > Content/README.txt
+          mono nuget.exe restore celestemeow.sln
 
-      - name: Package IPA (example, adjust path as needed)
+      - name: Build with msbuild (Mono)
         run: |
-          # Assuming msbuild or another tool outputs the IPA at some path
-          # Zip or move the IPA to a known location for upload
-          echo "Packaging step placeholder"
+          /Library/Frameworks/Mono.framework/Commands/msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - name: Package IPA (adjust paths as needed)
+        run: |
+          mkdir -p output
+          cp -r path/to/build/output/*.ipa output/
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: Celeste-iOS-Build
-          path: path/to/your/output.ipa  # Adjust this to the actual output IPA path
-
-      - name: Done
-        run: echo "Build finished, download your IPA artifact."
+          name: Celeste-iOS-IPA
+          path: output/*.ipa
