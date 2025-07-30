@@ -2,6 +2,9 @@ name: Build Celeste iOS App
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -16,23 +19,31 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install dependencies
+      - name: Install Xamarin.iOS
         run: |
           brew install --cask xamarin-ios
           echo "Dependencies installed."
 
-      - name: Create placeholder Content folder with dummy file
-        run: |
-          mkdir -p Content
-          echo "Replace this with your real Celeste game files." > Content/README.txt
+      - name: Restore NuGet packages
+        run: dotnet restore Celeste.sln
 
-      - name: Upload content request artifact
+      - name: Build Celeste iOS
+        run: msbuild Celeste.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
+
+      - name: Create IPA
+        run: |
+          # Assuming your Xamarin.iOS project outputs an .app bundle at this path
+          APP_PATH="path/to/your/Celeste.iOS.app"
+          IPA_PATH="$PWD/Celeste.ipa"
+
+          # Package the .app into an .ipa file
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r "$IPA_PATH" Payload
+          rm -rf Payload
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: upload-instructions
-          path: Content/
-          retention-days: 1
-
-      - name: Done
-        run: |
-          echo "Now download the artifact and replace it with your real Content/ folder."
+          name: celeste-ios-app
+          path: Celeste.ipa
