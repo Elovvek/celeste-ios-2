@@ -13,35 +13,26 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install dependencies
+        run: |
+          brew install mono
+          brew install --cask xcode
+          xcode-select --install || true
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install dependencies
-        run: |
-          brew install --cask mono-mdk nuget
-          # Optional: Install Xcode command line tools if needed
-          xcode-select --install || true
-
       - name: Restore NuGet packages
-        run: dotnet restore celestemeow.sln
+        run: msbuild /t:Restore celestemeow/celestemeow.sln
 
-      - name: Build solution
-        run: dotnet build celestemeow.sln -c Release -f:net6.0-ios /p:Platform=iPhone /p:BuildIpa=true
-
-      - name: Package IPA
-        run: |
-          # Assuming IPA is output to bin/Release/iPhone/...
-          # Adjust path if needed
-          IPA_PATH=$(find celestemeow/bin/Release -name "*.ipa" | head -n 1)
-          echo "IPA located at $IPA_PATH"
-          mkdir -p output
-          cp "$IPA_PATH" output/
+      - name: Build iOS project
+        run: msbuild celestemeow/celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(PWD)/output
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: Celeste-iOS-IPA
           path: output/*.ipa
-          retention-days: 5
+          retention-days: 7
