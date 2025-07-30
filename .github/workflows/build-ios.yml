@@ -10,34 +10,38 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
-      - name: Install Mono (official PKG)
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
         run: |
-          curl -LO https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.122.macos10.xamarin.universal.pkg
-          sudo installer -pkg MonoFramework-MDK-6.12.0.122.macos10.xamarin.universal.pkg -target /
-
-      - name: Check Mono version
-        run: mono --version
-
-      - name: Install NuGet CLI
-        run: |
-          curl -LO https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+          brew install --cask mono-mdk nuget
+          # Optional: Install Xcode command line tools if needed
+          xcode-select --install || true
 
       - name: Restore NuGet packages
-        run: |
-          mono nuget.exe restore celestemeow.sln
+        run: dotnet restore celestemeow.sln
 
-      - name: Build with msbuild (Mono)
-        run: |
-          /Library/Frameworks/Mono.framework/Commands/msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
+      - name: Build solution
+        run: dotnet build celestemeow.sln -c Release -f:net6.0-ios /p:Platform=iPhone /p:BuildIpa=true
 
-      - name: Package IPA (adjust paths as needed)
+      - name: Package IPA
         run: |
+          # Assuming IPA is output to bin/Release/iPhone/...
+          # Adjust path if needed
+          IPA_PATH=$(find celestemeow/bin/Release -name "*.ipa" | head -n 1)
+          echo "IPA located at $IPA_PATH"
           mkdir -p output
-          cp -r path/to/build/output/*.ipa output/
+          cp "$IPA_PATH" output/
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Celeste-iOS-IPA
           path: output/*.ipa
+          retention-days: 5
