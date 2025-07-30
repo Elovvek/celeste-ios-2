@@ -25,10 +25,10 @@ jobs:
           echo "Dependencies installed."
 
       - name: Restore NuGet packages
-        run: dotnet restore Celeste.sln
+        run: dotnet restore celestemeow.sln
 
       - name: Build Celeste iOS
-        run: msbuild Celeste.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
+        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
 
       - name: Create IPA
         run: |
