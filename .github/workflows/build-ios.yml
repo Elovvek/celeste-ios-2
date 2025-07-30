@@ -1,37 +1,43 @@
-name: Build Celeste iOS App
+name: Build Celeste iOS
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
+    - name: Checkout repo with submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-      - name: Install dependencies
-        run: |
-          brew install mono
-          xcode-select --install || true
+    - name: Install .NET 8 SDK
+      run: |
+        brew install --cask dotnet-sdk
+        dotnet --version
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+    - name: Install .NET MAUI workloads (including iOS)
+      run: |
+        dotnet workload install maui-ios
 
-      - name: Restore NuGet packages
-        run: msbuild /t:Restore celestemeow.sln
+    - name: Restore .NET dependencies
+      run: dotnet restore celestemeow.sln
 
-      - name: Build iOS project
-        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(PWD)/output
+    - name: Build iOS project
+      run: |
+        dotnet build celestemeow.sln \
+          -c Release \
+          -p:Platform=iPhone \
+          -p:BuildIpa=true \
+          -p:IpaPackageDir=$(pwd)/output
 
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Celeste-iOS-IPA
-          path: output/*.ipa
-          retention-days: 7
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: celeste-ios-ipa
+        path: output/*.ipa
