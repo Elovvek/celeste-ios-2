@@ -16,18 +16,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install dependencies (mono, nuget, etc)
-        run: |
-          brew update
-          brew install mono
-          brew install nuget
-          brew install --cask xamarin-ios
-
-      - name: Restore NuGet packages
-        run: nuget restore celestemeow.sln
+      - name: Restore packages
+        run: dotnet restore celestemeow.sln
 
       - name: Build solution
-        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
+        run: dotnet build celestemeow.sln -c Release -p:Platform=iPhone
 
       - name: Create Content.zip artifact
         run: zip -r Content.zip Content
