@@ -9,35 +9,34 @@ on:
 jobs:
   build-ios:
     runs-on: macos-latest
-
     steps:
-    - name: Checkout repo with submodules
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Install .NET 8 SDK
-      run: |
-        brew install --cask dotnet-sdk
-        dotnet --version
+      - name: Install Homebrew dependencies (Mono + Xamarin.iOS)
+        run: |
+          brew update
+          brew install mono
+          brew tap homebrew/cask-versions
+          brew install --cask xamarin-ios
 
-    - name: Install .NET MAUI workloads (including iOS)
-      run: |
-        dotnet workload install maui-ios
+      - name: Show Mono version
+        run: mono --version
 
-    - name: Restore .NET dependencies
-      run: dotnet restore celestemeow.sln
+      - name: Show msbuild version
+        run: msbuild -version
 
-    - name: Build iOS project
-      run: |
-        dotnet build celestemeow.sln \
-          -c Release \
-          -p:Platform=iPhone \
-          -p:BuildIpa=true \
-          -p:IpaPackageDir=$(pwd)/output
+      - name: Restore NuGet packages
+        run: nuget restore celestemeow.sln
 
-    - name: Upload IPA artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: celeste-ios-ipa
-        path: output/*.ipa
+      - name: Build iOS project
+        run: |
+          msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(pwd)/output
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: celeste-ios-ipa
+          path: output/*.ipa
