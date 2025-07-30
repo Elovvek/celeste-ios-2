@@ -1,0 +1,38 @@
+name: Build Celeste iOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
+        run: |
+          brew install --cask xamarin-ios
+          echo "Dependencies installed."
+
+      - name: Create placeholder Content folder with dummy file
+        run: |
+          mkdir -p Content
+          echo "Replace this with your real Celeste game files." > Content/README.txt
+
+      - name: Upload content request artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload-instructions
+          path: Content/
+          retention-days: 1
+
+      - name: Done
+        run: |
+          echo "Now download the artifact and replace it with your real Content/ folder."
