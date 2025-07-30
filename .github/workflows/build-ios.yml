@@ -16,7 +16,6 @@ jobs:
       - name: Install dependencies
         run: |
           brew install mono
-          brew install --cask xcode
           xcode-select --install || true
 
       - name: Setup .NET SDK
