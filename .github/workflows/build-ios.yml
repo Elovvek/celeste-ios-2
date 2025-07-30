@@ -8,10 +8,10 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout code (with submodules)
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
-          submodules: true  # This makes sure FNA is fetched!
+          lfs: true
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -20,21 +20,19 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install --cask xamarin-ios
-          echo "Dependencies installed."
+          brew update
+          brew install --cask mono-mdk
+          brew install nuget
 
-      - name: Create placeholder Content folder with dummy file
+      - name: Restore NuGet packages
+        run: dotnet restore celestemeow/celestemeow.sln
+
+      - name: Build the iOS app
         run: |
-          mkdir -p Content
-          echo "Replace this with your real Celeste game files." > Content/README.txt
+          msbuild celestemeow/celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
 
-      - name: Upload content request artifact
+      - name: Find and upload .ipa
         uses: actions/upload-artifact@v4
         with:
-          name: upload-instructions
-          path: Content/
-          retention-days: 1
-
-      - name: Done
-        run: |
-          echo "Now download the artifact and replace it with your real Content/ folder."
+          name: celeste-ios-ipa
+          path: celestemeow/bin/iPhone/Release/*.ipa
