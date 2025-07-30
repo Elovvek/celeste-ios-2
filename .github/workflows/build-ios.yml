@@ -24,10 +24,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore NuGet packages
-        run: msbuild /t:Restore celestemeow/celestemeow.sln
+        run: msbuild /t:Restore celestemeow.sln
 
       - name: Build iOS project
-        run: msbuild celestemeow/celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(PWD)/output
+        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(PWD)/output
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
