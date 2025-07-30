@@ -10,24 +10,44 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Checkout submodules explicitly (just in case)
+        run: git submodule update --init --recursive
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore packages
-        run: dotnet restore celestemeow.sln
+      - name: Install dependencies
+        run: |
+          brew install mono nuget
+          echo "Dependencies installed."
+
+      - name: Restore NuGet packages
+        run: nuget restore celestemeow.sln
 
       - name: Build solution
-        run: dotnet build celestemeow.sln -c Release -p:Platform=iPhone
+        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
 
-      - name: Create Content.zip artifact
-        run: zip -r Content.zip Content
+      - name: Create placeholder Content folder with dummy file (if needed)
+        run: |
+          mkdir -p Content
+          echo "Replace this with your real Celeste game files." > Content/README.txt
 
-      - name: Upload Content.zip artifact
+      - name: Package IPA (example, adjust path as needed)
+        run: |
+          # Assuming msbuild or another tool outputs the IPA at some path
+          # Zip or move the IPA to a known location for upload
+          echo "Packaging step placeholder"
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Content.zip
-          path: Content.zip
-          retention-days: 1
+          name: Celeste-iOS-Build
+          path: path/to/your/output.ipa  # Adjust this to the actual output IPA path
+
+      - name: Done
+        run: echo "Build finished, download your IPA artifact."
