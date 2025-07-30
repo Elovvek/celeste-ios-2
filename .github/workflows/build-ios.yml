@@ -2,48 +2,39 @@ name: Build Celeste iOS App
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout code (with submodules)
         uses: actions/checkout@v3
+        with:
+          submodules: true  # This makes sure FNA is fetched!
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install Xamarin.iOS
+      - name: Install dependencies
         run: |
           brew install --cask xamarin-ios
           echo "Dependencies installed."
 
-      - name: Restore NuGet packages
-        run: dotnet restore celestemeow.sln
-
-      - name: Build Celeste iOS
-        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
-
-      - name: Create IPA
+      - name: Create placeholder Content folder with dummy file
         run: |
-          # Assuming your Xamarin.iOS project outputs an .app bundle at this path
-          APP_PATH="path/to/your/Celeste.iOS.app"
-          IPA_PATH="$PWD/Celeste.ipa"
+          mkdir -p Content
+          echo "Replace this with your real Celeste game files." > Content/README.txt
 
-          # Package the .app into an .ipa file
-          mkdir -p Payload
-          cp -R "$APP_PATH" Payload/
-          zip -r "$IPA_PATH" Payload
-          rm -rf Payload
-
-      - name: Upload IPA artifact
+      - name: Upload content request artifact
         uses: actions/upload-artifact@v4
         with:
-          name: celeste-ios-app
-          path: Celeste.ipa
+          name: upload-instructions
+          path: Content/
+          retention-days: 1
+
+      - name: Done
+        run: |
+          echo "Now download the artifact and replace it with your real Content/ folder."
