@@ -10,29 +10,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          lfs: true
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install dependencies
+      - name: Install dependencies (mono, nuget, etc)
         run: |
           brew update
-          brew install --cask mono-mdk
+          brew install mono
           brew install nuget
+          brew install --cask xamarin-ios
 
       - name: Restore NuGet packages
-        run: dotnet restore celestemeow/celestemeow.sln
+        run: nuget restore celestemeow.sln
 
-      - name: Build the iOS app
-        run: |
-          msbuild celestemeow/celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /t:Build
+      - name: Build solution
+        run: msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone
 
-      - name: Find and upload .ipa
+      - name: Create Content.zip artifact
+        run: zip -r Content.zip Content
+
+      - name: Upload Content.zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: celeste-ios-ipa
-          path: celestemeow/bin/iPhone/Release/*.ipa
+          name: Content.zip
+          path: Content.zip
+          retention-days: 1
