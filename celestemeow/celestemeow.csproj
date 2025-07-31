@@ -107,7 +107,7 @@
         <Reference Include="System.Numerics" />
         <Reference Include="System.Numerics.Vectors" />
         <Reference Include="Celeste">
-            <HintPath>./../celeste/Celeste.dll</HintPath>
+            <HintPath>Celeste.dll</HintPath>
         </Reference>
         <ProjectReference Include="./../FNA/FNA.Core.csproj">
         </ProjectReference>
