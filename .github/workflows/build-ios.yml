@@ -4,39 +4,40 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build-ios:
     runs-on: macos-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 9.0.x
+        uses: actions/setup-dotnet@v3
         with:
-          submodules: recursive
+          dotnet-version: '9.0.x'
 
-      - name: Install Homebrew dependencies (Mono + Xamarin.iOS)
+      - name: Install Xamarin.iOS workload
         run: |
-          brew update
-          brew install mono
-          brew tap homebrew/cask-versions
-          brew install --cask xamarin-ios
-
-      - name: Show Mono version
-        run: mono --version
-
-      - name: Show msbuild version
-        run: msbuild -version
+          sudo dotnet workload install maui-ios --skip-manifest-update || true
+          dotnet workload restore
 
       - name: Restore NuGet packages
-        run: nuget restore celestemeow.sln
+        run: dotnet restore celestemeow.sln
 
-      - name: Build iOS project
+      - name: Build iOS project (Release)
         run: |
-          msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /p:IpaPackageDir=$(pwd)/output
+          msbuild celestemeow.sln /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true
+
+      - name: Find IPA
+        id: find_ipa
+        run: |
+          IPA_PATH=$(find ./ -name '*.ipa' | head -n 1)
+          echo "ipa_path=$IPA_PATH" >> $GITHUB_OUTPUT
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: celeste-ios-ipa
-          path: output/*.ipa
+          name: Celeste-iOS-IPA
+          path: ${{ steps.find_ipa.outputs.ipa_path }}
