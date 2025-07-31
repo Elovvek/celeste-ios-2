@@ -19,9 +19,7 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install Xamarin.iOS workload
-        run: |
-          sudo dotnet workload install maui-ios --skip-manifest-update || true
-          dotnet workload restore
+  run: sudo dotnet workload install maui-ios --skip-manifest-update
 
       - name: Restore NuGet packages
         run: dotnet restore celestemeow.sln
